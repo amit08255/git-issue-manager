@@ -1,0 +1,86 @@
+#!/bin/bash
+# Git hook to create/update issue on commit.
+# This script uses redmine/planio API for handling issues.
+
+# Required configurations --
+# issue.number -- update this issue if issue ID or number in config is not blank.
+# issue.project -- redmine project name where issue will be posted.
+# issue.user -- user ID to which you want to assign issue when it is created.
+# issue.apikey -- Redmine API key to access API.
+# issue.host -- Redmine site URL.
+
+#to check git config use command -- git config --list
+
+issue=$(git config issue.number)
+issueProject=$(git config issue.project)
+issueUser=$(git config issue.user)
+issueApi=$(git config issue.apikey)
+issueUrl=$(git config issue.host)
+
+
+function get_json {
+    python -c "import sys;import json;j=json.loads(sys.stdin.read());print(str(j$1));"
+}
+
+
+if [ "$issue" == "" ]
+then
+    echo "Configuration Error: issue.number is empty"
+
+    read -r -p "Would you like to create issue? [y/N] " response
+
+    case "$response" in
+        [yY][eE][sS]|[yY]) 
+            echo "Creating issue..."
+
+	    read -p "Enter issue subject: " issueSubject
+
+	    issueJson='{ "issue": {'
+
+	    if [ "$issueUrl" == "" ]
+	    then
+		read -p "Enter redmine site URL: " issueUrl
+	    fi
+
+	    if [ "$issueApi" == "" ]
+	    then
+		read -p "Enter issue API key: " issueApi
+	    fi
+
+	    if [ "$issueProject" == "" ]
+	    then
+		read -p "Enter issue project name: " issueProject
+	    fi
+
+	    if [ "$issueUser" != "" ]
+	    then
+		issueJson="$issueJson\"assigned_to_id\":\"$issueUser\","
+	    fi
+
+	    issueJson="$issueJson\"project_id\":\"$issueProject\","
+
+	    issueJson="$issueJson\"subject\":\"$issueSubject\""
+
+	    issueJson="$issueJson}}"
+
+	    echo $issueJson
+
+            createResponse=$(curl --silent -k "$issueUrl/issues.json" -X POST -H "X-Redmine-API-Key: $issueApi" -H 'Content-Type: application/json' -d "$issueJson")
+
+	    issue_id=`echo $createResponse | get_json "['issue']['id']"`
+
+	    if [ "$issue_id" == "" ]
+	    then
+		echo "Failed to create issue."
+		exit 1
+	    else
+		git config issue.number $issue_id
+		echo "Issue number updated in configuration"
+	    fi
+            ;;
+        *)
+            exit 1
+            ;;
+    esac
+fi
+
