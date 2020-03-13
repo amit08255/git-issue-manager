@@ -82,5 +82,27 @@ then
             exit 1
             ;;
     esac
+else
+    issueJson='{ "issue": {'
+    read -r -p "Do you want to close issue $issue? [y/N] " closeIssue
+
+    case "$closeIssue" in
+    [yY][eE][sS]|[yY]) 
+        echo "Closing issue..."
+	closeIssue=true
+        ;;
+    *)
+        echo "Issue not closed..."
+        ;;
+    esac
+    issueJson="$issueJson\"notes\":\"This is my test note\""
+    issueJson="$issueJson}}"
+
+    curl --silent -k "$issueUrl/issues/$issue.json" -X PUT -H "X-Redmine-API-Key: $issueApi" -H 'Content-Type: application/json' -d "$issueJson"
+
+    if [ $closeIssue == true ]
+    then
+	git config issue.number ""
+    fi
 fi
 
