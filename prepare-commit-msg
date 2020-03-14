@@ -23,8 +23,20 @@ function get_json {
 }
 
 
+function is_issue_in_commit {
+   python -c "import sys;import re;print(len(re.findall(r\"\[#.*?\]\:\s+http[s]\:\/\/.*?\",sys.stdin.read()))>0)"
+}
+
+
+#Add issue if a issue number and link is not already added in commit
 function add_issue_to_commit {
-    echo -e "\n\n[#$1]: $issueUrl/issues/$1 ""$(cat $2)" > "$2"
+
+    shouldAddIssue=`cat "$2" | is_issue_in_commit`
+
+    if [ "$shouldAddIssue" != "True" ]
+    then
+	echo -e "$(cat $2)""\n\n[#$1]: $issueUrl/issues/$1 " > "$2"
+    fi
 }
 
 
