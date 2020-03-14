@@ -14,6 +14,7 @@ This script will allow developer to automate workflow by enforcing adding issue 
 * `issue.user` -- user ID to which you want to assign issue when it is created.
 * `issue.apikey` -- Redmine API key to access API.
 * `issue.host` -- Redmine site URL.
+* `issue.commiturl` -- Commit URL. Example -- For https://github.com/name/project/commit/id it will be -- https://github.com/name/project/commit/
 
 ## Getting Started
 

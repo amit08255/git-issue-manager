@@ -8,6 +8,7 @@
 # issue.user -- user ID to which you want to assign issue when it is created.
 # issue.apikey -- Redmine API key to access API.
 # issue.host -- Redmine site URL.
+# issue.commiturl -- Commit URL. Example -- For https://github.com/name/project/commit/id it will be -- https://github.com/name/project/commit/
 
 #to check git config use command -- git config --list
 
@@ -15,12 +16,14 @@
 #echo "$(git log -1 HEAD)"|sed 1,3d  [Command to remove first 3 lines from commit]
 #echo "$(git log -1 HEAD)"|tail -1  [Command to get last line of commit]
 
+# Data is formatted in markdown. \n is replaced with <br/>
+
 issue=$(git config issue.number)
 issueProject=$(git config issue.project)
 issueUser=$(git config issue.user)
 issueApi=$(git config issue.apikey)
+commitUrl=$(git config issue.commiturl)
 
-NL=$'\n'
 
 function get_commit_issue_number {
    python -c "import sys;import re;a=re.findall(r\"\[#(.*?)\]\:\s+http[s]\:\/\/.*?\",sys.stdin.read());print(a[0] if len(a)>0 else '')"
@@ -36,7 +39,7 @@ function get_commit_message {
 }
 
 function get_json {
-   python -c "import json;import sys;a={'issue':{'notes': sys.stdin.read()}};print(json.dumps(a))"
+   python -c "import json;import sys;a={'issue':{'notes': sys.stdin.read().replace('\n','<br/>')}};print(json.dumps(a))"
 }
 
 lastCommit=$(git log -1 --pretty=%B HEAD)
@@ -49,7 +52,12 @@ url=$(echo "$lastCommit" | get_commit_issue_url)
 
 commitMessage=$(echo "$lastCommit" | get_commit_message)
 
-commitMessage="$commitMessage ${NL}${NL}Commit ID: $lastCommitId"
+commitMessage="$commitMessage <br/><br/> **Commit ID:** $lastCommitId"
+
+if [ "$commitUrl" != "" ]
+then
+    commitMessage="$commitMessage <br/> **Commit URL:** $commitUrl$lastCommitId"
+fi
 
 issueJson=$(echo "$commitMessage" | get_json)
 
