@@ -52,6 +52,8 @@ then
 
 	    read -p "Enter issue subject: " issueSubject
 
+	    read -p "Enter issue description: " issueDescription
+
 	    issueJson='{ "issue": {'
 
 	    if [ "$issueUrl" == "" ]
@@ -76,11 +78,11 @@ then
 
 	    issueJson="$issueJson\"project_id\":\"$issueProject\","
 
-	    issueJson="$issueJson\"subject\":\"$issueSubject\""
+	    issueJson="$issueJson\"subject\":\"$issueSubject\","
+
+	    issueJson="$issueJson\"description\":\"$issueDescription\""
 
 	    issueJson="$issueJson}}"
-
-	    echo $issueJson
 
             createResponse=$(curl --silent -k "$issueUrl/issues.json" -X POST -H "X-Redmine-API-Key: $issueApi" -H 'Content-Type: application/json' -d "$issueJson")
 
