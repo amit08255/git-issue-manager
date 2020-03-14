@@ -19,8 +19,6 @@ issue=$(git config issue.number)
 issueProject=$(git config issue.project)
 issueUser=$(git config issue.user)
 issueApi=$(git config issue.apikey)
-issueUrl=$(git config issue.host)
-
 
 function get_commit_issue_number {
    python -c "import sys;import re;a=re.findall(r\"\[#(.*?)\]\:\s+http[s]\:\/\/.*?\",sys.stdin.read());print(a[0] if len(a)>0 else '')"
@@ -31,10 +29,23 @@ function get_commit_issue_url {
    python -c "import sys;import re;a=re.findall(r\"\[#.*?\]\:\s+(http[s]\:\/\/\S+)\",sys.stdin.read());print(a[0] if len(a)>0 else '')"
 }
 
+function get_commit_message {
+   python -c "import sys;import re;print(re.sub(r\"\[#.*?\]\:\s+(http[s]\:\/\/\S+)\", \"\", sys.stdin.read(), 1).strip())"
+}
+
+function get_json {
+   python -c "import json;import sys;a={'issue':{'notes': sys.stdin.read()}};print(json.dumps(a))"
+}
+
 lastCommit=$(git log -1 --pretty=%B HEAD)
 
 lastIssueNumber=$(echo "$lastCommit" | get_commit_issue_number)
 
 url=$(echo "$lastCommit" | get_commit_issue_url)
 
-echo $url
+commitMessage=$(echo "$lastCommit" | get_commit_message)
+
+issueJson=$(echo "$commitMessage" | get_json)
+
+curl --silent -k "$url.json" -X PUT -H "X-Redmine-API-Key: $issueApi" -H 'Content-Type: application/json' -d "$issueJson"
+
