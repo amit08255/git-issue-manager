@@ -20,6 +20,8 @@ issueProject=$(git config issue.project)
 issueUser=$(git config issue.user)
 issueApi=$(git config issue.apikey)
 
+NL=$'\n'
+
 function get_commit_issue_number {
    python -c "import sys;import re;a=re.findall(r\"\[#(.*?)\]\:\s+http[s]\:\/\/.*?\",sys.stdin.read());print(a[0] if len(a)>0 else '')"
 }
@@ -39,11 +41,15 @@ function get_json {
 
 lastCommit=$(git log -1 --pretty=%B HEAD)
 
+lastCommitId=$(git log --format="%H" -n 1 HEAD)
+
 lastIssueNumber=$(echo "$lastCommit" | get_commit_issue_number)
 
 url=$(echo "$lastCommit" | get_commit_issue_url)
 
 commitMessage=$(echo "$lastCommit" | get_commit_message)
+
+commitMessage="$commitMessage ${NL}${NL}Commit ID: $lastCommitId"
 
 issueJson=$(echo "$commitMessage" | get_json)
 
