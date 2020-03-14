@@ -7,7 +7,7 @@ This script will allow developer to automate workflow by enforcing adding issue 
 * `prepare-commit-msg` -- Git hook to add issue number and link to commit message. If no issue is created, it will enforce user to create an issue and add its number in configuration.
 
 
-# Git configurations --
+## Git configurations
 
 * `issue.number` -- update this issue if issue ID or number in config is not blank.
 * `issue.project` -- redmine project name where issue will be posted.
@@ -15,7 +15,7 @@ This script will allow developer to automate workflow by enforcing adding issue 
 * `issue.apikey` -- Redmine API key to access API.
 * `issue.host` -- Redmine site URL.
 
-# Getting Started
+## Getting Started
 
 Copy Git hook scripts in hooks folder `.git/hooks`.
 Use below command to provide execute permission to script --
