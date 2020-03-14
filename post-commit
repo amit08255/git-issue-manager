@@ -1,0 +1,40 @@
+#!/bin/bash
+# Git hook to update issue on commit.
+# This script uses redmine/planio API for handling issues.
+
+# Required configurations --
+# issue.number -- update this issue if issue ID or number in config is not blank.
+# issue.project -- redmine project name where issue will be posted.
+# issue.user -- user ID to which you want to assign issue when it is created.
+# issue.apikey -- Redmine API key to access API.
+# issue.host -- Redmine site URL.
+
+#to check git config use command -- git config --list
+
+
+#echo "$(git log -1 HEAD)"|sed 1,3d  [Command to remove first 3 lines from commit]
+#echo "$(git log -1 HEAD)"|tail -1  [Command to get last line of commit]
+
+issue=$(git config issue.number)
+issueProject=$(git config issue.project)
+issueUser=$(git config issue.user)
+issueApi=$(git config issue.apikey)
+issueUrl=$(git config issue.host)
+
+
+function get_commit_issue_number {
+   python -c "import sys;import re;a=re.findall(r\"\[#(.*?)\]\:\s+http[s]\:\/\/.*?\",sys.stdin.read());print(a[0] if len(a)>0 else '')"
+}
+
+
+function get_commit_issue_url {
+   python -c "import sys;import re;a=re.findall(r\"\[#.*?\]\:\s+(http[s]\:\/\/\S+)\",sys.stdin.read());print(a[0] if len(a)>0 else '')"
+}
+
+lastCommit=$(git log -1 --pretty=%B HEAD)
+
+lastIssueNumber=$(echo "$lastCommit" | get_commit_issue_number)
+
+url=$(echo "$lastCommit" | get_commit_issue_url)
+
+echo $url
