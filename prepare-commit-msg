@@ -40,6 +40,22 @@ function add_issue_to_commit {
 }
 
 
+if [ "$issueUrl" == "" ]
+then
+    read -p "Enter redmine site URL: " issueUrl
+fi
+
+if [ "$issueApi" == "" ]
+then
+    read -p "Enter issue API key: " issueApi
+fi
+
+if [ "$issueProject" == "" ]
+then
+    read -p "Enter issue project name: " issueProject
+fi
+
+
 if [ "$issue" == "" ]
 then
     echo "Configuration Error: issue.number is empty"
@@ -55,21 +71,6 @@ then
 	    read -p "Enter issue description: " issueDescription
 
 	    issueJson='{ "issue": {'
-
-	    if [ "$issueUrl" == "" ]
-	    then
-		read -p "Enter redmine site URL: " issueUrl
-	    fi
-
-	    if [ "$issueApi" == "" ]
-	    then
-		read -p "Enter issue API key: " issueApi
-	    fi
-
-	    if [ "$issueProject" == "" ]
-	    then
-		read -p "Enter issue project name: " issueProject
-	    fi
 
 	    if [ "$issueUser" != "" ]
 	    then
