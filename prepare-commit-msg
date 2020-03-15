@@ -43,16 +43,19 @@ function add_issue_to_commit {
 if [ "$issueUrl" == "" ]
 then
     read -p "Enter redmine site URL: " issueUrl
+    git config issue.host "$issueUrl"
 fi
 
 if [ "$issueApi" == "" ]
 then
     read -p "Enter issue API key: " issueApi
+    git config issue.apikey "$issueApi"
 fi
 
 if [ "$issueProject" == "" ]
 then
     read -p "Enter issue project name: " issueProject
+    git config issue.project "$issueProject"
 fi
 
 
