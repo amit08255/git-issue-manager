@@ -5,6 +5,7 @@ This script will allow developer to automate workflow by enforcing adding issue 
 
 
 * `prepare-commit-msg` -- Git hook to add issue number and link to commit message. If no issue is created, it will enforce user to create an issue and add its number in configuration.
+* `post-commit` -- Git hook to update Redmine/Planio issue (if multiple issue number and links are added, it takes first one) after a commit with commit message, commit ID and commit URL.
 
 
 ## Git configurations
