@@ -121,7 +121,8 @@ else
         git config issue.isclosed "true"
         ;;
     *)
-        echo ""
+        issueStatus=""
+        git config issue.isclosed "false"
         ;;
     esac
 
