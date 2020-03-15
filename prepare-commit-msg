@@ -8,14 +8,20 @@
 # issue.user -- user ID to which you want to assign issue when it is created.
 # issue.apikey -- Redmine API key to access API.
 # issue.host -- Redmine site URL.
+# issue.commiturl -- Commit URL. Example -- For https://github.com/name/project/commit/id it will be -- https://github.com/name/project/commit/
+# issue.isclosed -- "true" if you want to close issue on post-commit
 
 #to check git config use command -- git config --list
+
+
+git config issue.isclosed "false"
 
 issue=$(git config issue.number)
 issueProject=$(git config issue.project)
 issueUser=$(git config issue.user)
 issueApi=$(git config issue.apikey)
 issueUrl=$(git config issue.host)
+issueStatus=""
 
 
 function get_json {
@@ -31,14 +37,13 @@ function is_issue_in_commit {
 #Add issue if a issue number and link is not already added in commit
 function add_issue_to_commit {
 
-    shouldAddIssue=`cat "$2" | is_issue_in_commit`
+    shouldAddIssue=`cat "$3" | is_issue_in_commit`
 
     if [ "$shouldAddIssue" != "True" ]
     then
-	echo -e "$(cat $2)""\n\n[#$1]: $issueUrl/issues/$1 " > "$2"
+	echo -e "$(cat $3)""\n\n[#$1]: $issueUrl/issues/$1 $2 " > "$3"
     fi
 }
-
 
 if [ "$issueUrl" == "" ]
 then
@@ -99,7 +104,7 @@ then
 	    else
 		git config issue.number $issue_id
 		echo "Issue number updated in configuration"
-		add_issue_to_commit $issue_id $1
+		add_issue_to_commit $issue_id "$issueStatus" $1
 	    fi
             ;;
         *)
@@ -107,6 +112,20 @@ then
             ;;
     esac
 else
-    add_issue_to_commit $issue $1
+
+    read -r -p "Do you want to close issue #$issue? [y/N] " closeIssue
+
+    case "$closeIssue" in
+    [yY][eE][sS]|[yY]) 
+        issueStatus="(closed)"
+        git config issue.isclosed "true"
+        ;;
+    *)
+        echo ""
+        ;;
+    esac
+
+    add_issue_to_commit $issue "$issueStatus" $1
+
 fi
 

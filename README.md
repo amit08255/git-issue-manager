@@ -16,6 +16,7 @@ This script will allow developer to automate workflow by enforcing adding issue 
 * `issue.apikey` -- Redmine API key to access API.
 * `issue.host` -- Redmine site URL.
 * `issue.commiturl` -- Commit URL. Example -- For https://github.com/name/project/commit/id it will be -- https://github.com/name/project/commit/
+* `issue.isclosed` -- "true" if you want to close issue on post-commit
 
 ## Getting Started
 
