@@ -73,5 +73,10 @@ then
     issueJson=$(echo "$issueJson" | close_issue)
 fi
 
-curl --silent -k "$url.json" -X PUT -H "X-Redmine-API-Key: $issueApi" -H 'Content-Type: application/json' -d "$issueJson"
+curl --silent -k "$url.json" -X PUT -H "X-Redmine-API-Key: $issueApi" -H 'Content-Type: application/json' -d "$issueJson" || exit 1
+
+if [ "$isClosed" == "true" ]
+then
+    git config issue.number ""
+fi
 
