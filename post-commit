@@ -17,7 +17,7 @@
 #echo "$(git log -1 HEAD)"|sed 1,3d  [Command to remove first 3 lines from commit]
 #echo "$(git log -1 HEAD)"|tail -1  [Command to get last line of commit]
 
-# Data is formatted in markdown. \n is replaced with <br/>
+NL=$'\n'
 
 issue=$(git config issue.number)
 issueProject=$(git config issue.project)
@@ -41,7 +41,7 @@ function get_commit_message {
 }
 
 function get_json {
-   python -c "import json;import sys;a={'issue':{'notes': sys.stdin.read().replace('\n','<br/>')}};print(json.dumps(a))"
+   python -c "import json;import sys;a={'issue':{'notes': sys.stdin.read()}};print(json.dumps(a))"
 }
 
 
@@ -59,11 +59,11 @@ url=$(echo "$lastCommit" | get_commit_issue_url)
 
 commitMessage=$(echo "$lastCommit" | get_commit_message)
 
-commitMessage="$commitMessage <br/><br/> **Commit ID:** $lastCommitId"
+commitMessage="$commitMessage ${NL}${NL}**Commit ID:** $lastCommitId"
 
 if [ "$commitUrl" != "" ]
 then
-    commitMessage="$commitMessage <br/> **Commit URL:** $commitUrl$lastCommitId"
+    commitMessage="$commitMessage ${NL}**Commit URL:** $commitUrl$lastCommitId"
 fi
 
 issueJson=$(echo "$commitMessage" | get_json)
