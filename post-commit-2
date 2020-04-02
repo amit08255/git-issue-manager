@@ -1,0 +1,111 @@
+#!/bin/bash
+# Git hook to update issue on commit.
+# This script uses redmine/planio API for handling issues.
+
+# Required configurations --
+# issue.number -- update this issue if issue ID or number in config is not blank.
+# issue.project -- redmine project name where issue will be posted.
+# issue.user -- user ID to which you want to assign issue when it is created.
+# issue.apikey -- Redmine API key to access API.
+# issue.host -- Redmine site URL.
+# issue.commiturl -- Commit URL. Example -- For https://github.com/name/project/commit/id it will be -- https://github.com/name/project/commit/
+# issue.isclosed -- "true" if you want to close issue on post-commit
+# issue.slacktoken -- slack token if you want to send message update to slack
+# issue.slackchannel -- slack channel name where you want to send message update.
+
+#to check git config use command -- git config --list
+
+
+#echo "$(git log -1 HEAD)"|sed 1,3d  [Command to remove first 3 lines from commit]
+#echo "$(git log -1 HEAD)"|tail -1  [Command to get last line of commit]
+
+NL=$'\n'
+
+issue=$(git config issue.number)
+issueProject=$(git config issue.project)
+issueUser=$(git config issue.user)
+issueApi=$(git config issue.apikey)
+commitUrl=$(git config issue.commiturl)
+isClosed=$(git config issue.isclosed)
+slackToken=$(git config issue.slacktoken)
+slackChannel=$(git config issue.slackchannel)
+fileList=$(git diff --name-only HEAD HEAD~1)
+
+function get_commit_issue_number {
+   python -c "import sys;import re;a=re.findall(r\"\[#(.*?)\]\:\s+http[s]\:\/\/.*?\",sys.stdin.read());print(a[0] if len(a)>0 else '')"
+}
+
+
+function get_commit_issue_url {
+   python -c "import sys;import re;a=re.findall(r\"\[#.*?\]\:\s+(http[s]\:\/\/\S+)\",sys.stdin.read());print(a[0] if len(a)>0 else '')"
+}
+
+function get_commit_message {
+   python -c "import sys;import re;print(re.sub(r\"\[#.*?\]\:\s+(http[s]\:\/\/\S+)\", \"\", sys.stdin.read(), 1).strip())"
+}
+
+function fix_commit_message {
+   python -c "import sys;import re;a=sys.stdin.read();regex = re.compile(r'^component[s]\:\s|^util[s]\:\s|^ref[s]\:\s|^container[s]\:\s|^font[s]\:\s|^page[s]\:\s|^style[s]\:\s|^const\:\s|^server\:\s|^fix\:\s|^chore[s]\:\s|^config\:\s|^file[s]\:\s|^session\:\s|^api\:\s', re.MULTILINE);print(regex.sub('', a))"
+}
+
+function get_slack_json {
+   python -c "import sys;import json;j=json.loads('$1');j['text']=sys.stdin.read();print(json.dumps(j))"
+}
+
+function get_json {
+   python -c "import json;import sys;a={'issue':{'notes': sys.stdin.read()}};print(json.dumps(a))"
+}
+
+
+function close_issue {
+python -c "import sys;import json;j=json.loads(sys.stdin.read());j['issue']['status_id']=\"8\";print(json.dumps(j))"
+}
+
+function get_modified_files {
+   python -c "import sys;import os;a=sys.stdin.read();print('*List of modified files:* \n\n' + '\n'.join([' -> '.join(line.split(os.path.sep)[1:]) for line in a.splitlines()]))"
+}
+
+
+modified_files=$(echo "$fileList" | get_modified_files)
+
+lastCommit=$(git log -1 --pretty=%B HEAD)
+
+lastCommitId=$(git log --format="%H" -n 1 HEAD)
+
+lastIssueNumber=$(echo "$lastCommit" | get_commit_issue_number)
+
+url=$(echo "$lastCommit" | get_commit_issue_url)
+
+commitMessage=$(echo "$lastCommit" | get_commit_message)
+
+commitMessage="$commitMessage ${NL}${NL}**Commit ID:** $lastCommitId"
+
+if [ "$commitUrl" != "" ]
+then
+    commitMessage="$commitMessage ${NL}**Commit URL:** $commitUrl$lastCommitId"
+fi
+
+issueJson=$(echo "$commitMessage" | get_json)
+
+if [ "$isClosed" == "true" ]
+then
+    issueJson=$(echo "$issueJson" | close_issue)
+fi
+
+curl --silent -k "$url.json" -X PUT -H "X-Redmine-API-Key: $issueApi" -H 'Content-Type: application/json' -d "$issueJson" || exit 1
+
+if [ "$isClosed" == "true" ]
+then
+    git config issue.number ""
+fi
+
+commitMessage=$(echo "$lastCommit" | get_commit_message)
+commitMessage=$(echo "*Updates! Updates! Updates!*${NL}${NL}$commitMessage" | fix_commit_message)
+commitMessage=$(echo "$commitMessage ${NL}${NL}$modified_files")
+
+slackJson='{"channel":'
+slackJson="$slackJson\"$slackChannel\", \"as_user\": true}"
+slackJson=$(echo "$commitMessage" | get_slack_json "$slackJson")
+
+curl --silent -X POST -H "Authorization: Bearer $slackToken" -H 'Content-type: application/json' --data "$slackJson" https://slack.com/api/chat.postMessage
+

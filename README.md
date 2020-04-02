@@ -6,6 +6,7 @@ This script will allow developer to automate workflow by enforcing adding issue 
 
 * `prepare-commit-msg` -- Git hook to add issue number and link to commit message. If no issue is created, it will enforce user to create an issue and add its number in configuration.
 * `post-commit` -- Git hook to update Redmine/Planio issue (if multiple issue number and links are added, it takes first one) after a commit with commit message, commit ID and commit URL.
+* `post-commit-2` -- Git post-commit hook example to update Redmine/Planio issue and send update on slack.
 
 
 ## Git configurations
@@ -17,6 +18,9 @@ This script will allow developer to automate workflow by enforcing adding issue 
 * `issue.host` -- Redmine site URL.
 * `issue.commiturl` -- Commit URL. Example -- For https://github.com/name/project/commit/id it will be -- https://github.com/name/project/commit/
 * `issue.isclosed` -- "true" if you want to close issue on post-commit
+* `issue.slacktoken` -- slack token if you want to send message update to slack
+* `issue.slackchannel` -- slack channel name where you want to send message update.
+
 
 ## Getting Started
 
